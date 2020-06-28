@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev">
+
+	<!-- admin -->
+   <select id="selectMenuAll" resultType="ddto"> <!-- 원래는 pack.DataDto인데 Configuration.xml에서 typeAliases로 별명을 지정해 주어서 dto로 사용 가능  -->
+      select * from menutbl
+   </select>
+   <select id="selectAdminLogin" parameterType="string" resultType="adto">
+   		select admin_id , admin_passwd from admintbl where admin_id = #{id}
+   </select>
+   <select id="selectMemberPart" parameterType="string"  resultType="mdto">
+   		select * from membertbl where member_no=#{member_no}
+   </select>
+   <select id="selectMenuPart" parameterType="string"  resultType="ddto">
+   		select * from menutbl where menu_no=#{menu_no}
+   </select>
+   <insert id="insertMenuData" parameterType="dform">
+   		insert into menutbl(menu_name,menu_price,menu_sdate,menu_category,menu_image) values(#{menu_name},#{menu_price},now(),#{menu_category},#{menu_image})
+   </insert>
+   <update id="updateMenuData" parameterType="dform">
+   		update menutbl set menu_name=#{menu_name},menu_price=#{menu_price},menu_image=#{menu_image} where menu_no=#{menu_no}
+   </update> 
+   <delete id="deleteData" parameterType="string">
+   		delete from menutbl where menu_no=#{menu_no}
+   </delete>
+   <select id="selectMemberAll" resultType="mdto">
+   		select * from membertbl
+   </select>
+   <delete id="deleteReview" parameterType="string">
+   		delete from reviewtbl where review_no=#{review_no}
+   </delete>
+   
+	<!-- 로그인 아이디 비밀번호 확인 -->
+	<select id="selectLogin" parameterType="string" resultType="mdto">
+		select * from membertbl
+		where member_id=#{login_id}
+	</select>
+	
+	<!-- 회원가입 -->
+	<insert id="joinMember" parameterType="mbean">
+		insert into membertbl(member_id, member_passwd, member_name, member_address, member_address_detail, member_sdate)
+		values(#{member_id}, #{member_passwd}, #{member_name}, #{member_address}, #{member_address_detail}, now())
+	</insert>
+	
+	<!-- 회원가입 아이디 중복체크 -->
+	<select id="joinIdCheck" parameterType="string" resultType="int">
+		select count(*) from membertbl
+		where member_id=#{join_id}
+	</select>
+	
+	<!-- 개인정보수정 아이디 비밀번호 확인 -->
+	<select id="selectMy" parameterType="string" resultType="mdto">
+		select * from membertbl
+		where member_id=#{myinfoupdate_id}
+	</select>
+	
+	<!-- 비밀번호 미변경 개인정보수정 -->
+	<update id="updateMember" parameterType="mbean">
+		update membertbl set member_name=#{member_name}, member_address=#{member_address}, member_address_detail=#{member_address_detail} where member_id=#{member_id}
+	</update>
+	
+	<!-- 비밀번호 변경 개인정보 수정 -->
+	<update id="updateMember2" parameterType="mbean">
+		update membertbl set member_passwd=#{member_passwd}, member_name=#{member_name}, member_address=#{member_address}, member_address_detail=#{member_address_detail}  where member_id=#{member_id}
+	</update>
+	<!-- 회원 탈퇴 -->
+	<delete id="deleteMember" parameterType="string">
+		delete from membertbl where member_id = #{member_id};
+	</delete>
+
+
+	<!-- mypage -->
+	<!-- 회원 주문내역 보기 -->
+	<select id="myOrderList" parameterType="string" resultType="odto">
+		select order_no, order_sdate, 
+		(SELECT menu_name FROM menutbl WHERE menu_no = (SELECT menu_num FROM order_detailtbl WHERE order_num = a.order_no LIMIT 1)) AS order_name,
+		(select count(*) from order_detailtbl where order_num = a.order_no) AS order_count,
+		(SELECT sum(menu_quantity*(SELECT menu_price FROM menutbl WHERE menu_no = b.menu_num)) FROM order_detailtbl AS b WHERE order_num = a.order_no) AS order_price
+		from ordertbl AS a 
+		WHERE order_id = #{login_id}
+	</select>
+	<select id="myOrderList2" parameterType="string" resultType="odto">
+		select order_no, order_sdate, 
+		(SELECT menu_name FROM menutbl WHERE menu_no = (SELECT menu_num FROM order_detailtbl WHERE order_num = a.order_no LIMIT 1)) AS order_name,
+		(select count(*) from order_detailtbl where order_num = a.order_no) AS order_count,
+		(SELECT sum(menu_quantity*(SELECT menu_price FROM menutbl WHERE menu_no = b.menu_num)) FROM order_detailtbl AS b WHERE order_num = a.order_no) AS order_price
+		from ordertbl AS a 
+		WHERE order_id = #{member_id}
+	</select>
+	<!-- 회원 주문내역 상세보기 -->
+	<select id="myOrderDetail" parameterType="string" resultType="ddto">
+		select order_num, menu_no, menu_name, menu_price, menu_category, menu_quantity AS menu_count from order_detailtbl inner join menutbl on menu_num = menu_no WHERE order_num = #{order_no}
+	</select>
+	<!-- 내 리뷰 보기 -->
+	<select id="myreview" parameterType="string" resultType="rdto">
+		select review_no, menu_name,review_comment, review_sdate from reviewtbl inner join menutbl on review_menu_num = menu_no where review_id = #{login_id}
+	</select>
+	<!-- 리뷰 삭제 -->
+	<delete id="myreviewdelete" parameterType="string">
+		delete from reviewtbl where review_no = #{review_no}
+	</delete>
+
+
+	<!-- Cart -->
+	<!-- cart select -->
+	<select id="selectCart" parameterType="String" resultType="cdto">
+		select * from carttbl where member_id=#{member_id}
+	</select>
+	<!-- cart 추가 -->
+	<insert id="addCart" parameterType="cbean">
+		insert into carttbl(member_id, menu_no, menu_name, menu_price, menu_quantity) 
+		values(#{member_id}, #{menu_no}, #{menu_name}, #{menu_price}, #{menu_quantity})
+	</insert>	
+	<!-- 카트 중복체크 -->
+	<select id="check" parameterType="cbean" resultType="cdto">
+		select * from carttbl where menu_no=#{menu_no} AND member_id=#{member_id}
+	</select>
+	<!-- 카트 수량 수정 -->
+	<update id="updateCnt" parameterType="cbean">
+		update carttbl set menu_quantity=#{menu_quantity} where menu_no=#{menu_no} AND member_id = #{member_id}
+	</update>
+	<!-- 카트 삽입을 위한 필요정보 가져오기 -->
+	<select id="selectMenuInfo" parameterType="String" resultType="ddto">
+		select menu_name, menu_price from menutbl where menu_no=#{menu_no}
+	</select>
+	<!-- 삭제 -->
+	<!-- 카트에서 선택한 물품만 삭제 -->
+	<delete id="deleteCartItem" parameterType="cbean">
+		delete from carttbl where menu_no=#{menu_no} AND member_id= #{member_id}
+	</delete>
+	<!-- 결제 후 전체 카트 삭제 -->
+	<delete id="deleteAllCart" parameterType="String">
+		delete from carttbl where member_id=#{member_id}
+	</delete>
+	<!-- 결제하기 -->
+	<insert id="insertOrder" parameterType="String">
+		insert into ordertbl(order_sdate, order_id) values(now(), #{order_id})
+	</insert>
+	<!-- order_detail 추가하기 위해 order의 no를 가져오기 -->
+	<select id="getMaxOrderNo" resultType="String">  
+		select Max(order_no) as no from ordertbl
+	</select>
+	<insert id="insertOrderDetail" parameterType="String">
+		INSERT INTO order_detailtbl(menu_quantity, menu_num, order_num) 
+		SELECT menu_quantity, menu_no, (select Max(order_no) as no from ordertbl) FROM carttbl where member_id = #{member_id}
+	</insert>
+	
+
+	<!-- 전체 메뉴 가져오기 -->
+	<select id="selectAll" resultType="ddto">
+		select * from menutbl
+	</select>
+	
+	<!-- 상품 자료 출력 -->
+	<select id="selectSearch" parameterType="dform" resultType="ddto">
+		select * from menutbl where menu_name like concat('%', #{search}, '%')
+	</select>
+	<select id="selectSoup" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category}
+	</select>
+	<select id="selectSide" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category}
+	</select>
+	<select id="selectMain" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category}
+	</select>
+	<select id="selectMeat" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category}
+	</select>
+	
+	<!-- 상품 정렬 -->
+	<select id="sortLow" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category} order by menu_price;
+	</select>
+	<select id="sortHigh" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category} order by menu_price desc;
+	</select>
+	<select id="sortLate" parameterType="string" resultType="ddto">
+		select * from menutbl where menu_category=#{menu_category} order by menu_sdate desc;
+	</select>
+	<select id="sortAlltoLow" resultType="ddto">
+		select * from menutbl order by menu_price
+	</select>
+	<select id="sortAlltoHigh" resultType="ddto">
+		select * from menutbl order by menu_price desc
+	</select>
+	<select id="sortAlltoReg" resultType="ddto">
+		select * from menutbl order by menu_sdate desc
+	</select>
+	
+	
+	<!-- 리뷰 -->
+	<select id="selectDataAll" resultType="rdto">
+		select menu_name,review_comment, menu_category, review_id, review_sdate, review_no from reviewtbl left outer join menutbl on review_menu_num=menu_no order by review_sdate desc limit 15
+	</select>
+	<select id="selectPart" parameterType="String" resultType="rdto">
+		select * from reviewtbl where review_menu_num = #{review_menu_num} order by review_sdate desc limit 15  
+	</select>
+	<!-- 추가시 내용 보이기 -->
+	<select id="selectPartReview1" parameterType="String" resultType="ddto">
+		select menu_category, menu_no, menu_name from menutbl where menu_no = #{review_menu_num}
+	</select>
+	<!-- 수정시 내용 보이기 -->
+	<select id="selectPartReview2" parameterType="String" resultType="rdto">
+		select review_no,review_id,review_comment,menu_name,menu_category, review_menu_num from reviewtbl left outer join menutbl on review_menu_num=menu_no where review_no=#{review_no}
+	</select>
+	<insert id="insertData" parameterType="rform">
+		insert into reviewtbl (review_id,review_comment,review_sdate,review_menu_num) values(#{review_id}, #{review_comment}, now(), #{review_menu_num})
+	</insert>
+	<update id="updateData" parameterType="rform">
+		update reviewtbl set review_comment=#{review_comment} where review_no = #{review_no}		
+	</update>
+	<delete id="delteData">
+	 	delete from reviewtbl where review_menu_num=#{review_menu_num} 
+	</delete>
+	
+</mapper>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+<properties resource="pack/mybatis/db.properties" />
+	<typeAliases>
+		<!-- 여기에 별명을 적어줄 수 있다. -->
+		<typeAlias type="pack.model.ReviewDto" alias="rdto"/>
+		<typeAlias type="pack.model.ReviewBean" alias="rform"/>
+		<typeAlias type="pack.model.MemberDto" alias="mdto"/>
+		<typeAlias type="pack.model.MemberBean" alias="mbean"/>
+		<typeAlias type="pack.model.CartDto" alias="cdto"/>
+		<typeAlias type="pack.model.CartBean" alias="cbean"/>
+		<typeAlias type="pack.model.DishDto" alias="ddto"/>  	<!-- dto로 별명을 줌 -->
+		<typeAlias type="pack.model.DishBean" alias="dform"/>
+		<typeAlias type="pack.model.OrderDto" alias="odto"/>
+		<typeAlias type="pack.model.AdminDto" alias="adto" />
+	</typeAliases>
+ <environments default="dev">
+  <environment id="dev">
+   <transactionManager type="JDBC" />
+   <dataSource type="POOLED">
+    <property name="driver" value="${driver}" />
+    <property name="url" value="${url}" />
+    <property name="username" value="${username}" />
+    <property name="password" value="${password}" />
+   </dataSource>
+  </environment>
+ </environments>	
+	<mappers>
+		<mapper resource="pack/mybatis/DataMapper.xml" />
+	</mappers>
+</configuration>

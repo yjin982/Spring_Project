@@ -1,0 +1,15 @@
+.top{
+	position: fixed;
+	left: 93%;
+	bottom: 50px;
+	display: none;
+}
+button{
+	border: none;
+	outline: none;
+	background-color: transparent;
+}
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
